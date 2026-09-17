@@ -25,7 +25,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   arrearsCount = 0,
 }) => {
   const navItems: { id: NavTab; label: string; icon: React.FC<{ className?: string }>; badge?: number }[] = [
-    { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
+    { id: 'dashboard', label: 'Menu', icon: LayoutDashboard },
     { id: 'rooms', label: 'Rooms', icon: Building },
     { id: 'tenants', label: 'Tenants', icon: Users, badge: arrearsCount > 0 ? arrearsCount : undefined },
     { id: 'payments', label: 'Payments', icon: CreditCard },
@@ -38,12 +38,16 @@ export const Navigation: React.FC<NavigationProps> = ({
       {/* Desktop Header / Nav */}
       <header className="hidden md:block sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-zinc-200 shadow-xs">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-black via-zinc-900 to-emerald-700 flex items-center justify-center text-emerald-400 border border-emerald-800/40 shadow-md">
+          <div
+            onClick={() => onSelectTab('dashboard')}
+            className="flex items-center gap-3 cursor-pointer group select-none"
+            title="Return to Main Menu"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-black via-zinc-900 to-emerald-700 flex items-center justify-center text-emerald-400 border border-emerald-800/40 shadow-md group-hover:scale-105 transition-transform">
               <Building className="w-5 h-5" />
             </div>
             <div>
-              <span className="font-bold text-base sm:text-lg font-heading text-zinc-900 leading-none block">
+              <span className="font-bold text-base sm:text-lg font-heading text-zinc-900 leading-none block group-hover:text-emerald-800 transition-colors">
                 CL LODGES & HOMES <span className="text-emerald-700 font-semibold text-xs sm:text-sm">/ APARTMENTS</span>
               </span>
               <span className="text-[11px] text-zinc-500 font-medium">

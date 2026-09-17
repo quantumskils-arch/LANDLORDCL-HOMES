@@ -9,7 +9,8 @@ import {
   Calendar,
   CheckCircle2,
   Trash2,
-  FileText
+  FileText,
+  ArrowLeft
 } from 'lucide-react';
 import type { Payment, Tenant, Room, Property, PaymentMethod } from '../types';
 import {
@@ -33,6 +34,7 @@ interface PaymentsScreenProps {
   onClearInitialTenantId?: () => void;
   onRefresh: () => void;
   onViewReceipt: (payment: Payment) => void;
+  onBackToMenu?: () => void;
 }
 
 const PAYMENT_METHODS: PaymentMethod[] = [
@@ -51,6 +53,7 @@ export const PaymentsScreen: React.FC<PaymentsScreenProps> = ({
   onClearInitialTenantId,
   onRefresh,
   onViewReceipt,
+  onBackToMenu,
 }) => {
   const { showToast, showSuccess, showError } = useToast();
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthYear());
@@ -229,6 +232,23 @@ export const PaymentsScreen: React.FC<PaymentsScreenProps> = ({
 
   return (
     <div className="space-y-5 pb-6">
+      {/* Top Menu Breadcrumb Navigation */}
+      {onBackToMenu && (
+        <div className="flex items-center justify-between pb-1 border-b border-zinc-200/60">
+          <button
+            type="button"
+            onClick={onBackToMenu}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 active:scale-95 text-zinc-700 hover:text-emerald-700 border border-zinc-200/80 shadow-2xs text-xs font-bold transition group min-h-[38px]"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-zinc-400 group-hover:text-emerald-600 transition" />
+            <span>← Back to Main Menu</span>
+          </button>
+          <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/60 px-2.5 py-1 rounded-full">
+            Payments & Receipts
+          </span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div>
@@ -385,10 +405,11 @@ export const PaymentsScreen: React.FC<PaymentsScreenProps> = ({
                           <button
                             type="button"
                             onClick={() => onViewReceipt(payment)}
-                            className="inline-flex items-center gap-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition min-h-[40px]"
+                            className="inline-flex items-center gap-1 px-3 py-2 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs font-bold rounded-xl shadow-xs transition min-h-[40px]"
+                            title="View & Share PDF Receipt"
                           >
-                            <Eye className="w-3.5 h-3.5" />
-                            <span>Receipt</span>
+                            <FileText className="w-3.5 h-3.5 text-emerald-200" />
+                            <span>Receipt / PDF</span>
                           </button>
 
                           <button
@@ -406,10 +427,10 @@ export const PaymentsScreen: React.FC<PaymentsScreenProps> = ({
                                 window.open(url, '_blank');
                               }
                             }}
-                            className="inline-flex items-center gap-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs transition active:scale-95 min-h-[40px]"
-                            title="Share on WhatsApp"
+                            className="inline-flex items-center gap-1 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 text-xs font-semibold rounded-xl shadow-xs transition active:scale-95 min-h-[40px]"
+                            title="Send WhatsApp text summary"
                           >
-                            <Share2 className="w-3.5 h-3.5" />
+                            <Share2 className="w-3.5 h-3.5 text-emerald-400" />
                             <span className="hidden sm:inline">WhatsApp</span>
                           </button>
 

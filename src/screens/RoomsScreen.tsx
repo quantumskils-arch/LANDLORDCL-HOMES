@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, UserPlus, Home, AlertCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, UserPlus, Home, AlertCircle, ArrowLeft } from 'lucide-react';
 import type { Room, Tenant, RoomType, RoomStatus } from '../types';
 import { formatUGX } from '../utils/formatters';
 import { saveRoom, deleteRoom } from '../db/indexedDb';
@@ -12,6 +12,7 @@ interface RoomsScreenProps {
   tenants: Tenant[];
   onRefresh: () => void;
   onAssignTenantToRoom: (roomId: string) => void;
+  onBackToMenu?: () => void;
 }
 
 const ROOM_TYPES: RoomType[] = [
@@ -27,6 +28,7 @@ export const RoomsScreen: React.FC<RoomsScreenProps> = ({
   tenants,
   onRefresh,
   onAssignTenantToRoom,
+  onBackToMenu,
 }) => {
   const { showSuccess, showError } = useToast();
   const [filter, setFilter] = useState<'All' | RoomStatus>('All');
@@ -120,6 +122,23 @@ export const RoomsScreen: React.FC<RoomsScreenProps> = ({
 
   return (
     <div className="space-y-5 pb-6">
+      {/* Top Menu Breadcrumb Navigation */}
+      {onBackToMenu && (
+        <div className="flex items-center justify-between pb-1 border-b border-zinc-200/60">
+          <button
+            type="button"
+            onClick={onBackToMenu}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 active:scale-95 text-zinc-700 hover:text-emerald-700 border border-zinc-200/80 shadow-2xs text-xs font-bold transition group min-h-[38px]"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-zinc-400 group-hover:text-emerald-600 transition" />
+            <span>← Back to Main Menu</span>
+          </button>
+          <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/60 px-2.5 py-1 rounded-full">
+            Rooms & Units
+          </span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div>

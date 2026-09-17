@@ -19,7 +19,7 @@ import { TenantsScreen } from './screens/TenantsScreen';
 import { PaymentsScreen } from './screens/PaymentsScreen';
 import { ExpensesScreen } from './screens/ExpensesScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
-import { Building, Plus, Loader2 } from 'lucide-react';
+import { Building, Plus, Loader2, ArrowLeft, LayoutDashboard } from 'lucide-react';
 
 export function AppContent() {
   const [isLoading, setIsLoading] = useState(true);
@@ -124,29 +124,68 @@ export function AppContent() {
       <PWAInstallBanner />
 
       {/* Top Mobile Bar */}
-      <div className="md:hidden sticky top-0 z-30 bg-black/95 backdrop-blur-md border-b border-zinc-800 px-4 py-3 flex items-center justify-between shadow-md">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-xs">
-            <Building className="w-4 h-4" />
-          </div>
-          <div>
-            <span className="font-bold text-sm font-heading leading-tight block text-white truncate max-w-[200px] sm:max-w-xs">
+      <div className="md:hidden sticky top-0 z-30 bg-black/95 backdrop-blur-md border-b border-zinc-800 px-3.5 py-2.5 flex items-center justify-between shadow-md">
+        <div className="flex items-center gap-2">
+          {currentTab !== 'dashboard' ? (
+            <button
+              type="button"
+              onClick={() => setCurrentTab('dashboard')}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-zinc-850 hover:bg-zinc-800 active:bg-zinc-700 text-emerald-400 border border-zinc-700 text-xs font-bold transition shadow-xs"
+              aria-label="Back to Main Menu"
+              title="Return to Main Menu"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Menu</span>
+            </button>
+          ) : (
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setCurrentTab('dashboard')}
+              className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-xs"
+            >
+              <Building className="w-4 h-4" />
+            </div>
+          )}
+
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => setCurrentTab('dashboard')}
+            className="cursor-pointer text-left"
+            title="Go to Main Menu"
+          >
+            <span className="font-bold text-xs sm:text-sm font-heading leading-tight block text-white truncate max-w-[170px] sm:max-w-xs">
               {property.name || 'CL LODGES AND HOMES / CL APARTMENTS'}
             </span>
-            <span className="text-[10px] text-zinc-400 font-medium">
-              {property.ownerName || 'Sendagire Razak'}
+            <span className="text-[10px] text-zinc-400 font-medium block">
+              {currentTab === 'dashboard' ? (property.ownerName || 'Sendagire Razak') : 'Tap for Menu'}
             </span>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => handleOpenRecordPayment()}
-          className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold rounded-lg shadow-xs transition"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Pay</span>
-        </button>
+        <div className="flex items-center gap-1.5">
+          {currentTab !== 'dashboard' && (
+            <button
+              type="button"
+              onClick={() => setCurrentTab('dashboard')}
+              className="p-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white rounded-lg border border-zinc-800 transition flex items-center justify-center"
+              title="Return to Menu"
+              aria-label="Return to Main Menu"
+            >
+              <LayoutDashboard className="w-4 h-4 text-emerald-400" />
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => handleOpenRecordPayment()}
+            className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold rounded-lg shadow-xs transition"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Pay</span>
+          </button>
+        </div>
       </div>
 
       {/* Desktop Navigation */}
@@ -177,6 +216,7 @@ export function AppContent() {
             tenants={tenants}
             onRefresh={loadAllData}
             onAssignTenantToRoom={handleAssignTenantToRoom}
+            onBackToMenu={() => setCurrentTab('dashboard')}
           />
         )}
 
@@ -191,6 +231,7 @@ export function AppContent() {
             onRefresh={loadAllData}
             onOpenRecordPayment={handleOpenRecordPayment}
             onViewReceipt={handleViewReceipt}
+            onBackToMenu={() => setCurrentTab('dashboard')}
           />
         )}
 
@@ -204,6 +245,7 @@ export function AppContent() {
             onClearInitialTenantId={() => setPrefilledPaymentTenantId(null)}
             onRefresh={loadAllData}
             onViewReceipt={handleViewReceipt}
+            onBackToMenu={() => setCurrentTab('dashboard')}
           />
         )}
 
@@ -213,6 +255,7 @@ export function AppContent() {
             payments={payments}
             rooms={rooms}
             onRefresh={loadAllData}
+            onBackToMenu={() => setCurrentTab('dashboard')}
           />
         )}
 
@@ -220,6 +263,7 @@ export function AppContent() {
           <SettingsScreen
             property={property}
             onRefresh={loadAllData}
+            onBackToMenu={() => setCurrentTab('dashboard')}
           />
         )}
       </main>

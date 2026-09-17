@@ -1,9 +1,10 @@
-import React from 'react';
-import { Download, Share2, Printer, CheckCircle2, Home, Phone } from 'lucide-react';
+import React, { useState } from 'react';
+import { Download, Share2, Printer, CheckCircle2, Home, Phone, MessageSquare, Check, ArrowLeft } from 'lucide-react';
 import { Modal } from './Modal';
 import type { Property, Room, Tenant, Payment } from '../types';
 import { formatUGX, formatDate, getWhatsAppReceiptUrl } from '../utils/formatters';
-import { generateReceiptPdf } from '../utils/pdfGenerator';
+import { generateReceiptPdf, shareReceiptPdf } from '../utils/pdfGenerator';
+import { useToast } from './Toast';
 
 interface ReceiptModalProps {
   isOpen: boolean;
@@ -22,19 +23,63 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   room,
   payment,
 }) => {
+  const { showSuccess, showError } = useToast();
+  const [isSharing, setIsSharing] = useState(false);
+
   if (!isOpen) return null;
 
   const isPaidInFull = payment.amountPaid >= payment.amountDue;
   const balanceRemaining = Math.max(0, payment.amountDue - payment.amountPaid);
 
-  const handleDownloadPdf = () => {
-    const { doc, filename, blobUrl } = generateReceiptPdf({ property, tenant, room, payment });
-    doc.save(filename);
-    // Also attempt open in new window if possible
-    window.open(blobUrl, '_blank');
+  const handleSharePdf = async () => {
+    try {
+      setIsSharing(true);
+      const result = await shareReceiptPdf({ property, tenant, room, payment });
+      if (result.method === 'native-share') {
+        if (result.success) {
+          showSuccess('PDF Receipt shared successfully!');
+        }
+      } else {
+        // Download fallback occurred
+        showSuccess('PDF downloaded to your device! Opening WhatsApp to attach...');
+        const whatsappUrl = getWhatsAppReceiptUrl({
+          tenantPhone: tenant.phone,
+          tenantName: tenant.fullName,
+          period: payment.periodMonth,
+          amount: payment.amountPaid,
+          receiptNo: payment.receiptNumber,
+          ownerName: property.ownerName,
+        });
+        window.open(whatsappUrl, '_blank');
+      }
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') {
+        console.error('Share failed:', err);
+        showError('Could not share directly. Downloading PDF to device.');
+        handleDownloadPdf();
+      }
+    } finally {
+      setIsSharing(false);
+    }
   };
 
-  const handleWhatsAppShare = () => {
+  const handleDownloadPdf = () => {
+    try {
+      const { filename, blobUrl } = generateReceiptPdf({ property, tenant, room, payment });
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showSuccess(`PDF saved: ${filename}`);
+    } catch (err) {
+      console.error(err);
+      showError('Failed to generate PDF download.');
+    }
+  };
+
+  const handleWhatsAppTextShare = () => {
     const url = getWhatsAppReceiptUrl({
       tenantPhone: tenant.phone,
       tenantName: tenant.fullName,
@@ -54,31 +99,48 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} title="Payment Receipt" maxWidth="md">
       <div className="flex flex-col gap-4">
         {/* Action Buttons Bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="space-y-2">
+          {/* Primary Action: Share PDF Receipt */}
           <button
             type="button"
-            onClick={handleDownloadPdf}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-black hover:bg-zinc-800 active:scale-95 text-white text-xs font-semibold shadow-sm transition min-h-[44px]"
+            onClick={handleSharePdf}
+            disabled={isSharing}
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-700 to-black hover:opacity-95 active:scale-98 text-white text-sm font-bold shadow-md transition min-h-[48px]"
           >
-            <Download className="w-4 h-4" />
-            Download PDF
+            <Share2 className="w-4 h-4 text-emerald-300" />
+            <span>{isSharing ? 'Preparing PDF...' : 'Share PDF Receipt (WhatsApp / All Apps)'}</span>
+            <span className="text-[10px] bg-emerald-950/80 text-emerald-300 px-1.5 py-0.5 rounded-md uppercase font-mono font-semibold">
+              PDF
+            </span>
           </button>
-          <button
-            type="button"
-            onClick={handleWhatsAppShare}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-semibold shadow-sm transition min-h-[44px]"
-          >
-            <Share2 className="w-4 h-4" />
-            WhatsApp Share
-          </button>
-          <button
-            type="button"
-            onClick={handlePrint}
-            className="col-span-2 sm:col-span-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-xs font-semibold transition min-h-[44px]"
-          >
-            <Printer className="w-4 h-4" />
-            Print
-          </button>
+
+          {/* Secondary Actions */}
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              className="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl bg-black hover:bg-zinc-800 active:scale-95 text-white text-xs font-semibold shadow-xs transition min-h-[44px]"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Download PDF</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleWhatsAppTextShare}
+              className="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-semibold shadow-xs transition min-h-[44px]"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>WhatsApp Msg</span>
+            </button>
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-xs font-semibold transition min-h-[44px]"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>Print</span>
+            </button>
+          </div>
         </div>
 
         {/* Printable/Preview Receipt Card */}
@@ -207,6 +269,17 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               Built by NileSites — Professional Digital Solutions for Uganda (nilesites.vercel.app)
             </p>
           </div>
+        </div>
+
+        {/* Bottom Close Button */}
+        <div className="flex justify-end pt-1">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold transition min-h-[44px]"
+          >
+            Done • Close Receipt
+          </button>
         </div>
       </div>
     </Modal>

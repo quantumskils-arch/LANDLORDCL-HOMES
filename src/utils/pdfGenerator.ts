@@ -9,7 +9,13 @@ export interface ReceiptData {
   payment: Payment;
 }
 
-export function generateReceiptPdf(data: ReceiptData): { doc: jsPDF; filename: string; blobUrl: string } {
+export function generateReceiptPdf(data: ReceiptData): {
+  doc: jsPDF;
+  filename: string;
+  blobUrl: string;
+  blob: Blob;
+  file: File;
+} {
   const { property, tenant, room, payment } = data;
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -213,7 +219,51 @@ export function generateReceiptPdf(data: ReceiptData): { doc: jsPDF; filename: s
   const filename = `Receipt-${payment.receiptNumber}-${cleanTenantName}.pdf`;
 
   const blob = doc.output('blob');
+  const file = new File([blob], filename, { type: 'application/pdf', lastModified: Date.now() });
   const blobUrl = URL.createObjectURL(blob);
 
-  return { doc, filename, blobUrl };
+  return { doc, filename, blobUrl, blob, file };
 }
+
+/**
+ * Native PDF share with automatic fallback to download + WhatsApp messaging
+ */
+export async function shareReceiptPdf(params: {
+  property: Property;
+  tenant: Tenant;
+  room?: Room;
+  payment: Payment;
+}): Promise<{ success: boolean; method: 'native-share' | 'download-fallback' }> {
+  const { filename, blobUrl, file } = generateReceiptPdf(params);
+
+  // 1. Try modern Web Share API with PDF File (works on iOS Safari, Android Chrome, Edge)
+  if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare) {
+    try {
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `Rent Receipt ${params.payment.receiptNumber}`,
+          text: `Payment Receipt for ${params.tenant.fullName} • ${params.property.name || 'CL LODGES AND HOMES / CL APARTMENTS'}`,
+        });
+        return { success: true, method: 'native-share' };
+      }
+    } catch (shareErr: any) {
+      // User cancelled the share dialog
+      if (shareErr.name === 'AbortError') {
+        return { success: false, method: 'native-share' };
+      }
+      console.warn('Native file share failed, falling back to download:', shareErr);
+    }
+  }
+
+  // 2. Fallback: Programmatically trigger PDF download
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  return { success: true, method: 'download-fallback' };
+}
+

@@ -13,7 +13,8 @@ import {
   FileText,
   CheckCircle2,
   AlertTriangle,
-  Receipt
+  Receipt,
+  ArrowLeft
 } from 'lucide-react';
 import type { Tenant, Room, Payment, Property, TenantStatus } from '../types';
 import { calculateTenantBalances } from '../utils/calculations';
@@ -33,6 +34,7 @@ interface TenantsScreenProps {
   onRefresh: () => void;
   onOpenRecordPayment: (tenantId: string) => void;
   onViewReceipt: (payment: Payment) => void;
+  onBackToMenu?: () => void;
 }
 
 export const TenantsScreen: React.FC<TenantsScreenProps> = ({
@@ -45,6 +47,7 @@ export const TenantsScreen: React.FC<TenantsScreenProps> = ({
   onRefresh,
   onOpenRecordPayment,
   onViewReceipt,
+  onBackToMenu,
 }) => {
   const { showSuccess, showError } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
@@ -207,6 +210,23 @@ export const TenantsScreen: React.FC<TenantsScreenProps> = ({
 
   return (
     <div className="space-y-5 pb-6">
+      {/* Top Menu Breadcrumb Navigation */}
+      {onBackToMenu && (
+        <div className="flex items-center justify-between pb-1 border-b border-zinc-200/60">
+          <button
+            type="button"
+            onClick={onBackToMenu}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 active:scale-95 text-zinc-700 hover:text-emerald-700 border border-zinc-200/80 shadow-2xs text-xs font-bold transition group min-h-[38px]"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-zinc-400 group-hover:text-emerald-600 transition" />
+            <span>← Back to Main Menu</span>
+          </button>
+          <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/60 px-2.5 py-1 rounded-full">
+            Tenants Directory
+          </span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div>

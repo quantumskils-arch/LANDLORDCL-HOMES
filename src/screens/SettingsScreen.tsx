@@ -13,7 +13,8 @@ import {
   ExternalLink,
   MessageSquare,
   HelpCircle,
-  CheckCircle2
+  CheckCircle2,
+  ArrowLeft
 } from 'lucide-react';
 import type { Property } from '../types';
 import {
@@ -30,11 +31,13 @@ import { Modal } from '../components/Modal';
 interface SettingsScreenProps {
   property: Property;
   onRefresh: () => void;
+  onBackToMenu?: () => void;
 }
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   property,
   onRefresh,
+  onBackToMenu,
 }) => {
   const { showSuccess, showError } = useToast();
   const { isInstallable, isInstalled, install } = usePWAInstall();
@@ -155,6 +158,23 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
   return (
     <div className="space-y-6 pb-6 max-w-2xl mx-auto">
+      {/* Top Menu Breadcrumb Navigation */}
+      {onBackToMenu && (
+        <div className="flex items-center justify-between pb-1 border-b border-zinc-200/60">
+          <button
+            type="button"
+            onClick={onBackToMenu}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 active:scale-95 text-zinc-700 hover:text-emerald-700 border border-zinc-200/80 shadow-2xs text-xs font-bold transition group min-h-[38px]"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-zinc-400 group-hover:text-emerald-600 transition" />
+            <span>← Back to Main Menu</span>
+          </button>
+          <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/60 px-2.5 py-1 rounded-full">
+            Settings & System
+          </span>
+        </div>
+      )}
+
       {/* Header */}
       <div>
         <h1 className="text-xl sm:text-2xl font-bold font-heading text-slate-900">Settings</h1>
