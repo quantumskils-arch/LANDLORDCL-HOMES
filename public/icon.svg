@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a0a" />
+      <stop offset="50%" stop-color="#052e16" />
+      <stop offset="100%" stop-color="#16a34a" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22c55e" />
+      <stop offset="100%" stop-color="#15803d" />
+    </linearGradient>
+  </defs>
+  <!-- Background with slight rounding -->
+  <rect width="512" height="512" rx="96" fill="url(#brandGrad)" />
+  
+  <!-- Outer subtle circular glow -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#22c55e" stroke-width="4" stroke-opacity="0.3" stroke-dasharray="16 12" />
+  
+  <!-- Stylized Modern Building / Roof -->
+  <path d="M256 112L128 214V384C128 395 137 404 148 404H212V296C212 287 219 280 228 280H284C293 280 300 287 300 296V404H364C375 404 384 395 384 384V214L256 112Z" fill="#FFFFFF" />
+  
+  <!-- Door Accent / Cash flow symbol -->
+  <rect x="236" y="304" width="40" height="100" rx="6" fill="url(#accentGrad)" />
+  
+  <!-- Coin / Flow Badge -->
+  <circle cx="340" cy="180" r="44" fill="url(#accentGrad)" stroke="#FFFFFF" stroke-width="6" />
+  <text x="340" y="192" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="900" fill="#FFFFFF" text-anchor="middle">UG</text>
+  
+  <!-- Chimney or Window detail -->
+  <rect x="180" y="240" width="36" height="36" rx="6" fill="#052e16" opacity="0.9" />
+  <rect x="296" y="240" width="36" height="36" rx="6" fill="#052e16" opacity="0.9" />
+</svg>

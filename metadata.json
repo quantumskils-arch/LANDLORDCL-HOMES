@@ -1,0 +1,6 @@
+{
+  "name": "CL LODGES AND HOMES / CL APARTMENTS",
+  "description": "Offline-first rental property management Progressive Web App for CL LODGES AND HOMES / CL APARTMENTS in Uganda.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

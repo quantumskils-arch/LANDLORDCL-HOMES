@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Space Grotesk', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading, .font-display, .font-amount {
+  font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #F8FAFC;
+  color: #0F172A;
+  -webkit-tap-highlight-color: transparent;
+}
