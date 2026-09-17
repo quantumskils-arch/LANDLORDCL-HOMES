@@ -204,6 +204,7 @@ export function AppContent() {
             rooms={rooms}
             tenants={tenants}
             payments={payments}
+            expenses={expenses}
             onOpenRecordPayment={handleOpenRecordPayment}
             onViewReceipt={handleViewReceipt}
             onNavigateTab={(tab) => setCurrentTab(tab)}

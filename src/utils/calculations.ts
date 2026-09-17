@@ -1,4 +1,4 @@
-import type { Room, Tenant, Payment, TenantBalanceInfo } from '../types';
+import type { Room, Tenant, Payment, TenantBalanceInfo, Expense } from '../types';
 import { parseMonthYear, formatMonthYear, getCurrentMonthYear } from './formatters';
 
 export function calculateTenantBalances(
@@ -168,5 +168,78 @@ export function getDashboardSummary(
     overdueTenants,
     dueSoonTenants,
     recentPayments,
+  };
+}
+
+export interface MonthlyFinancialSummary {
+  periodMonth: string;
+  totalRentCollected: number;
+  totalExpenses: number;
+  netIncome: number;
+  marginPercentage: number;
+  expensePercentage: number;
+  paymentsCount: number;
+  expensesCount: number;
+  categoryBreakdown: { category: string; amount: number; percentage: number }[];
+}
+
+export function getMonthlyFinancialSummary(
+  payments: Payment[],
+  expenses: Expense[],
+  referenceDate: Date = new Date()
+): MonthlyFinancialSummary {
+  const currentMonthStr = formatMonthYear(referenceDate);
+
+  // Filter payments for current month (by periodMonth or date)
+  const monthPayments = payments.filter((p) => {
+    if (p.periodMonth === currentMonthStr) return true;
+    const d = new Date(p.paymentDate);
+    return formatMonthYear(d) === currentMonthStr;
+  });
+
+  const totalRentCollected = monthPayments.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
+
+  // Filter expenses for current month
+  const monthExpenses = expenses.filter((e) => {
+    const d = new Date(e.date);
+    return formatMonthYear(d) === currentMonthStr;
+  });
+
+  const totalExpenses = monthExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+  const netIncome = totalRentCollected - totalExpenses;
+
+  const marginPercentage =
+    totalRentCollected > 0 ? Math.round((netIncome / totalRentCollected) * 100) : 0;
+  const expensePercentage =
+    totalRentCollected > 0
+      ? Math.min(100, Math.round((totalExpenses / totalRentCollected) * 100))
+      : totalExpenses > 0
+      ? 100
+      : 0;
+
+  // Category breakdown
+  const categoryMap: { [cat: string]: number } = {};
+  for (const exp of monthExpenses) {
+    categoryMap[exp.category] = (categoryMap[exp.category] || 0) + (exp.amount || 0);
+  }
+
+  const categoryBreakdown = Object.entries(categoryMap)
+    .map(([category, amount]) => ({
+      category,
+      amount,
+      percentage: totalExpenses > 0 ? Math.round((amount / totalExpenses) * 100) : 0,
+    }))
+    .sort((a, b) => b.amount - a.amount);
+
+  return {
+    periodMonth: currentMonthStr,
+    totalRentCollected,
+    totalExpenses,
+    netIncome,
+    marginPercentage,
+    expensePercentage,
+    paymentsCount: monthPayments.length,
+    expensesCount: monthExpenses.length,
+    categoryBreakdown,
   };
 }

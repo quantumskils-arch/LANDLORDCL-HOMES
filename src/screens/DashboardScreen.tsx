@@ -3,16 +3,20 @@ import {
   Building,
   Users,
   TrendingUp,
+  TrendingDown,
   AlertOctagon,
   Calendar,
   CreditCard,
   MessageCircle,
   Clock,
   ArrowUpRight,
-  CheckCircle2
+  CheckCircle2,
+  Wallet,
+  ArrowRight,
+  Plus
 } from 'lucide-react';
-import type { Property, Room, Tenant, Payment } from '../types';
-import { getDashboardSummary } from '../utils/calculations';
+import type { Property, Room, Tenant, Payment, Expense } from '../types';
+import { getDashboardSummary, getMonthlyFinancialSummary } from '../utils/calculations';
 import { formatUGX, formatDate, getCurrentMonthYear, getWhatsAppReminderUrl } from '../utils/formatters';
 
 interface DashboardScreenProps {
@@ -20,6 +24,7 @@ interface DashboardScreenProps {
   rooms: Room[];
   tenants: Tenant[];
   payments: Payment[];
+  expenses?: Expense[];
   onOpenRecordPayment: (prefillTenantId?: string) => void;
   onViewReceipt: (payment: Payment) => void;
   onNavigateTab: (tab: 'rooms' | 'tenants' | 'payments' | 'expenses') => void;
@@ -30,12 +35,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   rooms,
   tenants,
   payments,
+  expenses = [],
   onOpenRecordPayment,
   onViewReceipt,
   onNavigateTab,
 }) => {
   const currentMonthYearStr = getCurrentMonthYear();
   const summary = getDashboardSummary(rooms, tenants, payments);
+  const financialSummary = getMonthlyFinancialSummary(payments, expenses);
 
   const handleSendReminder = (tenant: Tenant, amount: number, roomNum: string, dueDate: string) => {
     const url = getWhatsAppReminderUrl({
@@ -187,6 +194,205 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             className="bg-emerald-600 h-2 rounded-full transition-all duration-500"
             style={{ width: `${Math.max(4, Math.min(100, summary.occupancyPercentage))}%` }}
           />
+        </div>
+      </div>
+
+      {/* MONTHLY FINANCIAL SUMMARY SECTION */}
+      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                <Wallet className="w-4 h-4" />
+              </div>
+              <h2 className="text-base sm:text-lg font-bold font-heading text-slate-900">
+                Monthly Financial Summary
+              </h2>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Aggregated rent collected vs operating expenses for <span className="font-semibold text-slate-700">{currentMonthYearStr}</span>
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => onNavigateTab('expenses')}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200/60 transition"
+            >
+              <span>Manage Expenses</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* 3 Core Financial Metric Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Total Rent Collected */}
+          <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/80">
+            <div className="flex items-center justify-between text-emerald-800 mb-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wider">Rent Collected</span>
+              <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-2xs">
+                <TrendingUp className="w-3.5 h-3.5" />
+              </div>
+            </div>
+            <div className="text-xl sm:text-2xl font-bold font-heading text-emerald-900 font-amount">
+              {formatUGX(financialSummary.totalRentCollected)}
+            </div>
+            <div className="text-[11px] text-emerald-700 font-medium mt-1">
+              {financialSummary.paymentsCount} {financialSummary.paymentsCount === 1 ? 'payment' : 'payments'} this month
+            </div>
+          </div>
+
+          {/* Total Operating Expenses */}
+          <div className="p-4 rounded-2xl bg-rose-50/70 border border-rose-200/80">
+            <div className="flex items-center justify-between text-rose-800 mb-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wider">Expenses Incurred</span>
+              <div className="w-7 h-7 rounded-lg bg-rose-600 text-white flex items-center justify-center shadow-2xs">
+                <TrendingDown className="w-3.5 h-3.5" />
+              </div>
+            </div>
+            <div className="text-xl sm:text-2xl font-bold font-heading text-rose-900 font-amount">
+              {formatUGX(financialSummary.totalExpenses)}
+            </div>
+            <div className="text-[11px] text-rose-700 font-medium mt-1">
+              {financialSummary.expensesCount} {financialSummary.expensesCount === 1 ? 'expense' : 'expenses'} logged
+            </div>
+          </div>
+
+          {/* Net Cash Flow / Profit */}
+          <div className={`p-4 rounded-2xl border ${
+            financialSummary.netIncome >= 0
+              ? 'bg-zinc-900 text-white border-zinc-800 shadow-xs'
+              : 'bg-red-50 text-red-900 border-red-200'
+          }`}>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className={`text-xs font-semibold uppercase tracking-wider ${
+                financialSummary.netIncome >= 0 ? 'text-emerald-400' : 'text-red-700'
+              }`}>
+                Net Cash Flow
+              </span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                financialSummary.netIncome >= 0
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                  : 'bg-red-200 text-red-800'
+              }`}>
+                {financialSummary.netIncome >= 0 ? 'Surplus' : 'Deficit'}
+              </span>
+            </div>
+            <div className={`text-xl sm:text-2xl font-bold font-heading font-amount ${
+              financialSummary.netIncome >= 0 ? 'text-white' : 'text-red-700'
+            }`}>
+              {financialSummary.netIncome >= 0 ? '+' : ''}{formatUGX(financialSummary.netIncome)}
+            </div>
+            <div className={`text-[11px] font-medium mt-1 ${
+              financialSummary.netIncome >= 0 ? 'text-zinc-300' : 'text-red-600'
+            }`}>
+              {financialSummary.totalRentCollected > 0
+                ? `${financialSummary.marginPercentage}% net margin retained`
+                : 'Awaiting rent collections'}
+            </div>
+          </div>
+        </div>
+
+        {/* Visual Cash Flow Retention Bar */}
+        <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-200/70 space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs font-semibold text-slate-700">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+              <span>Net Profit Retained: <strong className="text-emerald-700">{Math.max(0, financialSummary.marginPercentage)}%</strong></span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+              <span>Operating Costs: <strong className="text-rose-700">{financialSummary.expensePercentage}%</strong></span>
+            </span>
+          </div>
+
+          <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden flex">
+            {financialSummary.totalRentCollected > 0 || financialSummary.totalExpenses > 0 ? (
+              <>
+                <div
+                  className="bg-emerald-500 h-full transition-all duration-500"
+                  style={{
+                    width: `${Math.max(
+                      0,
+                      financialSummary.totalRentCollected > 0
+                        ? Math.max(0, 100 - financialSummary.expensePercentage)
+                        : 0
+                    )}%`,
+                  }}
+                  title="Net Rent Retained"
+                />
+                <div
+                  className="bg-rose-500 h-full transition-all duration-500"
+                  style={{
+                    width: `${Math.min(
+                      100,
+                      financialSummary.totalRentCollected > 0
+                        ? financialSummary.expensePercentage
+                        : 100
+                    )}%`,
+                  }}
+                  title="Operating Expenses"
+                />
+              </>
+            ) : (
+              <div className="w-full bg-slate-200 h-full flex items-center justify-center text-[10px] text-slate-400 font-medium">
+                No financial transactions recorded this month
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Expense Category Breakdown for Current Month */}
+        <div>
+          <div className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2 flex items-center justify-between">
+            <span>Expenses Breakdown ({currentMonthYearStr})</span>
+            {financialSummary.categoryBreakdown.length > 0 && (
+              <span className="text-[11px] text-slate-500 font-normal">
+                {financialSummary.categoryBreakdown.length} active {financialSummary.categoryBreakdown.length === 1 ? 'category' : 'categories'}
+              </span>
+            )}
+          </div>
+
+          {financialSummary.categoryBreakdown.length === 0 ? (
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/60 flex items-center justify-between gap-3">
+              <p className="text-xs text-slate-500">
+                No expenses logged for {currentMonthYearStr} yet.
+              </p>
+              <button
+                type="button"
+                onClick={() => onNavigateTab('expenses')}
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 shadow-2xs transition"
+              >
+                <Plus className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Add Expense</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {financialSummary.categoryBreakdown.map((item) => (
+                <div
+                  key={item.category}
+                  className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/70 flex items-center justify-between gap-2"
+                >
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-slate-800 truncate">
+                      {item.category}
+                    </p>
+                    <p className="text-[10px] text-slate-500">
+                      {item.percentage}% of month's expenses
+                    </p>
+                  </div>
+                  <div className="text-right whitespace-nowrap">
+                    <span className="text-xs font-bold text-rose-700 font-amount">
+                      {formatUGX(item.amount)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
